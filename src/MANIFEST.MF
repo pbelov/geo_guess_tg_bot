@@ -1,0 +1,2 @@
+Manifest-Version: 1.0
+Main-Class: com.pbelov.java.tg.geo_guess_bot.Main
