@@ -19,6 +19,7 @@ class BaseEventsHelper {
     static String chatName = null;
     static String messageText = null;
     static String senderUserName;
+    static long senderUserID;
     static Message message;
     static User sender;
     static String argsString;
@@ -36,6 +37,8 @@ class BaseEventsHelper {
         message = event.getMessage();
         sender = message.getSender();
         senderUserName = sender.getUsername();
+        senderUserID = sender.getId();
+
         String personName = sender.getFullName() + " (" + senderUserName + ")";
         messageText = event.getContent().getContent().trim();
 

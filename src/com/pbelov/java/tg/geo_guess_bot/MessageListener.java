@@ -5,8 +5,6 @@ import pro.zackpollard.telegrambot.api.event.chat.message.CommandMessageReceived
 import pro.zackpollard.telegrambot.api.event.chat.message.PhotoMessageReceivedEvent;
 import pro.zackpollard.telegrambot.api.event.chat.message.TextMessageReceivedEvent;
 
-import java.io.IOException;
-
 @SuppressWarnings({"FieldCanBeLocal", "unchecked", "ResultOfMethodCallIgnored"})
 public class MessageListener implements Listener {
     private final String TAG = "MessageListener";
@@ -25,35 +23,36 @@ public class MessageListener implements Listener {
 
     @Override
     public void onPhotoMessageReceived(PhotoMessageReceivedEvent event) {
-        try {
-            MessageHelper.analyzeImage(event);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        CommandsHelper.addImage(event);
     }
 
     private void handleCommand(CommandMessageReceivedEvent event) {
         final String command = CommandsHelper.getCommandsData(event);
 
         final String COMMAND_ADD = "add";
+        final String COMMAND_CANCEL = "cancel";
         final String COMMAND_NEXT = "next";
         final String COMMAND_SKIP = "skip";
+        final String COMMAND_TOP = "top";
+        final String COMMAND_STATS = "stats";
 
         if (command.equals(COMMAND_ADD)) {
             CommandsHelper.handleAddCommand(event);
         } else if (command.equals(COMMAND_NEXT)) {
             CommandsHelper.handleNextCommand(event);
         } else if (command.equals(COMMAND_SKIP)) {
-            CommandsHelper.hanndleSkipCommand(event);
+            CommandsHelper.handleSkipCommand(event);
+        } else if (command.equals(COMMAND_CANCEL)) {
+            CommandsHelper.handleCancelCommand(event);
+        } else if (command.equals(COMMAND_TOP)) {
+            CommandsHelper.handleTopCommand(event);
+        } else if (command.equals(COMMAND_STATS)) {
+            CommandsHelper.handleStatsCommand(event);
         }
     }
 
     private void handleMessage(TextMessageReceivedEvent event) {
-        String messageText = MessageHelper.getMessagesData();
-
-        if (!BaseEventsHelper.checkBotStatus()) {
-            return;
-        }
+        CommandsHelper.handleMessage(event);
 
 
     }

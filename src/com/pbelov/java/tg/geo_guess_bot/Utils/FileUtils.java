@@ -2,6 +2,7 @@ package com.pbelov.java.tg.geo_guess_bot.Utils;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.file.Paths;
@@ -13,11 +14,11 @@ public class FileUtils {
 
     private FileUtils() {}
 
-    static void appendStringToFile(String string, File outputFile) {
+    public static void appendStringToFile(String string, File outputFile) {
         writeStringToFile(string, outputFile, true);
     }
 
-    static void writeStringToFile(String string, File outputFile) {
+    public static void writeStringToFile(String string, File outputFile) {
         writeStringToFile(string, outputFile, false);
     }
 
@@ -52,6 +53,70 @@ public class FileUtils {
         }
 
         //if no charsets worked, print exception and give up
-        Utils.println(TAG, "fail: " + exception);
+        Utils.error(TAG, "fail: " + exception);
+    }
+
+    private static String readStringFromStream(InputStream is) {
+        BufferedReader in = null;
+        StringBuilder buf = new StringBuilder();
+
+        //try to read with each supported charset until we find one that works
+        Exception exception = null;
+        for (Charset charset : charsets) {
+            try {
+                CharsetDecoder decoder = charset.newDecoder();
+                decoder.onMalformedInput(CodingErrorAction.REPORT);
+                decoder.onUnmappableCharacter(CodingErrorAction.REPORT);
+                in = new BufferedReader(new InputStreamReader(is, decoder));
+
+                String str;
+                boolean isFirst = true;
+                while ((str = in.readLine()) != null) {
+                    if (isFirst) {
+                        isFirst = false;
+                    } else {
+                        buf.append('\n');
+                    }
+
+                    buf.append(str);
+                }
+                return buf.toString();
+
+            } catch (Exception e) {
+                exception = e;
+            } finally {
+                if (is != null) {
+                    try {
+                        is.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        Utils.error(TAG, "Error closing stream");
+                    }
+                }
+            }
+
+        }
+
+        Utils.error(TAG, "Error opening or reading stream: " + exception);
+        return null;
+    }
+
+    public static String loadFileAsString(File file) {
+        Utils.error(TAG, "loadFileAsString: file name = " + file.getName());
+        InputStream is = null;
+        try {
+            is = new FileInputStream(file);
+        } catch (IOException e) {
+            Utils.error(TAG, "Error opening or reading file " + file.getPath() + ": " + e);
+        }
+
+        return readStringFromStream(is);
     }
 }
