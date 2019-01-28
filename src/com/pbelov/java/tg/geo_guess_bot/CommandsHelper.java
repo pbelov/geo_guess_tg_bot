@@ -19,14 +19,13 @@ import java.util.Map;
 class CommandsHelper extends BaseEventsHelper {
     private static final String TAG = "MessageHelper";
     private static final String GUESSES_SUBDIR = "guesses";
-    private static Map<Long, State> mapStates = new HashMap<>();
-    private static Map<Long, Integer> mapIndex = new HashMap<>();
+    private static HashMap<Long, State> mapStates = new HashMap<>();
     // last correct guess by user
-    private static Map<Long, Integer> mapGuessID = new HashMap<>();
+    private static HashMap<Long, Integer> mapGuessID = new HashMap<>();
 
-    private static Map<Long, AddState> mapAddStates = new HashMap<>();
+    private static HashMap<Long, AddState> mapAddStates = new HashMap<>();
     // general quest state per user
-    private static Map<Long, GuessState> mapGuessStates = new HashMap<>();
+    private static HashMap<Long, GuessState> mapGuessStates = new HashMap<>();
 
     private static FilenameFilter filenameFilter = (dir, name) -> (name.endsWith(".jpg"));
 
@@ -129,6 +128,9 @@ class CommandsHelper extends BaseEventsHelper {
 
     private static void skipGuess(CommandMessageReceivedEvent event) {
         mapStates.put(senderUserID, State.IDLE);
+        mapGuessID.put(senderUserID, getCurrentGuessID());
+        mapGuessStates.put(senderUserID, GuessState.Q);
+        nextGuess(event);
     }
 
     private static void nextGuess(CommandMessageReceivedEvent event) {
@@ -147,7 +149,6 @@ class CommandsHelper extends BaseEventsHelper {
                 String qText = FileUtils.loadFileAsString(new File(GUESSES_SUBDIR, nextGuessId + "_q.txt"));
                 TgMsgUtil.sendToChat(event, qText);
                 mapGuessStates.put(senderUserID, GuessState.A);
-                mapIndex.put(senderUserID, getLatestQuestId());
             }
         } else {
             TgMsgUtil.sendToChat(event, "тут должен быть вопрос с картинкой");
@@ -157,6 +158,10 @@ class CommandsHelper extends BaseEventsHelper {
 
     private static String getNextQuestId() {
         File guessesFile = new File(GUESSES_SUBDIR);
+        if (!guessesFile.exists()) {
+            guessesFile.mkdirs();
+            guessesFile.mkdir();
+        }
         Integer lastIndex = mapGuessID.get(senderUserID);
         if (lastIndex == null) {
             lastIndex = 0;
@@ -234,6 +239,8 @@ class CommandsHelper extends BaseEventsHelper {
                 }
             }
         }
+
+        saveSate();
     }
 
     private static int getLatestQuestId() {
@@ -251,6 +258,33 @@ class CommandsHelper extends BaseEventsHelper {
 //
 //        return currentQuestID.split("_")[0] + "_" + currentQuestID.split("_")[1];
 //    }
+
+    private static void saveSate() {
+        FileUtils.saveSerializable(mapStates, "mapStates");
+        FileUtils.saveSerializable(mapGuessID, "mapGuessID");
+        FileUtils.saveSerializable(mapAddStates, "mapAddStates");
+        FileUtils.saveSerializable(mapGuessStates, "mapGuessStates");
+    }
+
+    public static void restoreState() {
+        mapStates = FileUtils.loadSerializable("mapStates");
+        if (mapStates == null) {
+            mapStates = new HashMap<>();
+        }
+        mapGuessID = FileUtils.loadSerializable("mapGuessID");
+        if (mapGuessID == null) {
+            mapGuessID = new HashMap<>();
+        }
+        mapAddStates = FileUtils.loadSerializable("mapAddStates");
+        if (mapAddStates == null) {
+            mapAddStates = new HashMap<>();
+        }
+        mapGuessStates = FileUtils.loadSerializable("mapGuessStates");
+        if (mapGuessStates == null) {
+            mapGuessStates = new HashMap<>();
+        }
+
+    }
 
     enum AddState {
         IDLE,

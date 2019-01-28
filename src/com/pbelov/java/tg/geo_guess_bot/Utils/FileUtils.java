@@ -6,6 +6,7 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.file.Paths;
+import java.util.HashMap;
 
 public class FileUtils {
     public static final File WORKING_DIR = new File(Paths.get("").toAbsolutePath().toString());
@@ -118,5 +119,56 @@ public class FileUtils {
         }
 
         return readStringFromStream(is);
+    }
+
+    public static void saveSerializable(Serializable prevDayMap, String name) {
+        File file = new File(name);
+        if (file.exists()) {
+            file.delete();
+        }
+
+        ObjectOutputStream oos = null;
+        FileOutputStream fout;
+        try {
+            fout = new FileOutputStream(name, true);
+            oos = new ObjectOutputStream(fout);
+            oos.writeObject(prevDayMap);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            if (oos != null) {
+                try {
+                    oos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static HashMap loadSerializable(String name) {
+        HashMap readCase = null;
+
+        if (new File(name).exists()) {
+            ObjectInputStream objectinputstream = null;
+            try {
+                FileInputStream streamIn = new FileInputStream(name);
+                objectinputstream = new ObjectInputStream(streamIn);
+                readCase = (HashMap)objectinputstream.readObject();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (objectinputstream != null) {
+                    try {
+                        objectinputstream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+        }
+
+        return readCase;
     }
 }

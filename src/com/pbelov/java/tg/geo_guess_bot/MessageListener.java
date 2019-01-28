@@ -9,6 +9,11 @@ import pro.zackpollard.telegrambot.api.event.chat.message.TextMessageReceivedEve
 public class MessageListener implements Listener {
     private final String TAG = "MessageListener";
 
+    public MessageListener() {
+        CommandsHelper.restoreState();
+    }
+
+
     @Override
     public void onCommandMessageReceived(CommandMessageReceivedEvent event) {
         BaseEventsHelper.getBaseData(event, "command");
@@ -53,7 +58,5 @@ public class MessageListener implements Listener {
 
     private void handleMessage(TextMessageReceivedEvent event) {
         CommandsHelper.handleMessage(event);
-
-
     }
 }
