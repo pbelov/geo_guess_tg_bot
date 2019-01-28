@@ -21,11 +21,12 @@ class CommandsHelper extends BaseEventsHelper {
     private static final String GUESSES_SUBDIR = "guesses";
     private static Map<Long, State> mapStates = new HashMap<>();
     private static Map<Long, Integer> mapIndex = new HashMap<>();
+    // last correct guess by user
     private static Map<Long, Integer> mapGuessID = new HashMap<>();
 
     private static Map<Long, AddState> mapAddStates = new HashMap<>();
+    // general quest state per user
     private static Map<Long, GuessState> mapGuessStates = new HashMap<>();
-    private static Map<Long, Integer> mapStats = new HashMap<>();
 
     private static FilenameFilter filenameFilter = (dir, name) -> (name.endsWith(".jpg"));
 
@@ -45,7 +46,13 @@ class CommandsHelper extends BaseEventsHelper {
     }
 
     private static Integer getCurrentGuessID() {
-        return mapGuessID.get(senderUserID);
+        Integer t =  mapGuessID.get(senderUserID);
+        if (t == null) {
+            t = 0;
+        } else {
+            t++;
+        }
+        return t;
     }
 
 
@@ -72,7 +79,7 @@ class CommandsHelper extends BaseEventsHelper {
 
     private static void addQuest(CommandMessageReceivedEvent event) {
         TgMsgUtil.sendToChat(event, "Пришли фотографию места для угадайки");
-        mapGuessID.put(senderUserID, getLatestQuestId());
+//        mapGuessID.put(senderUserID, getLatestQuestId());
         mapStates.put(senderUserID, State.ADD);
         mapAddStates.put(senderUserID, AddState.IMAGE);
     }
@@ -132,12 +139,12 @@ class CommandsHelper extends BaseEventsHelper {
                 mapStates.put(senderUserID, State.IDLE);
                 mapAddStates.put(senderUserID, AddState.IDLE);
             } else {
-                File imagefile = new File(GUESSES_SUBDIR, getCurrentGuessID() + 1 + "_image.jpg");
+                File imagefile = new File(GUESSES_SUBDIR, nextGuessId + "_image.jpg");
                 InputFile inputFile = new InputFile(imagefile);
                 SendablePhotoMessage sendablePhotoMessage = SendablePhotoMessage.builder().photo(inputFile).build();
                 event.getChat().sendMessage(sendablePhotoMessage);
 
-                String qText = FileUtils.loadFileAsString(new File(GUESSES_SUBDIR, getCurrentGuessID() + 1 + "_q.txt"));
+                String qText = FileUtils.loadFileAsString(new File(GUESSES_SUBDIR, nextGuessId + "_q.txt"));
                 TgMsgUtil.sendToChat(event, qText);
                 mapGuessStates.put(senderUserID, GuessState.A);
                 mapIndex.put(senderUserID, getLatestQuestId());
@@ -150,13 +157,15 @@ class CommandsHelper extends BaseEventsHelper {
 
     private static String getNextQuestId() {
         File guessesFile = new File(GUESSES_SUBDIR);
-        Integer lastIndex = mapIndex.get(senderUserID);
+        Integer lastIndex = mapGuessID.get(senderUserID);
         if (lastIndex == null) {
             lastIndex = 0;
+        } else {
+            lastIndex++;
         }
 
         String guessesId[] = guessesFile.list(filenameFilter);
-        if (guessesId.length == 0) {
+        if (guessesId.length == 0 || lastIndex >= guessesId.length) {
             return null;
         } else {
             return guessesId[lastIndex].replaceAll("_image.jpg", "");
@@ -181,7 +190,7 @@ class CommandsHelper extends BaseEventsHelper {
 
     public static void addQuestion(TextMessageReceivedEvent event) {
         if (getCurrentAddState() == AddState.QUESTION) {
-            File questionFile = new File(GUESSES_SUBDIR, getLatestQuestId() + "_q.txt");
+            File questionFile = new File(GUESSES_SUBDIR, (getLatestQuestId() - 1) + "_q.txt");
             FileUtils.writeStringToFile(messageText, questionFile);
             TgMsgUtil.sendToChat(event, "Отлично! Теперь ответ. Чем конкретнее, тем лучше, например название улицы и номер дома.");
             mapAddStates.put(senderUserID, AddState.ANSWER);
@@ -192,7 +201,7 @@ class CommandsHelper extends BaseEventsHelper {
 
     public static void addAnswer(TextMessageReceivedEvent event) {
         if (getCurrentAddState() == AddState.ANSWER) {
-            File questionFile = new File(GUESSES_SUBDIR,getLatestQuestId() + "_a.txt");
+            File questionFile = new File(GUESSES_SUBDIR, (getLatestQuestId() - 1) + "_a.txt");
             FileUtils.writeStringToFile(messageText, questionFile);
             TgMsgUtil.sendToChat(event, "Угадайка принята, спасибо!");
             mapAddStates.put(senderUserID, AddState.IDLE);
@@ -217,7 +226,7 @@ class CommandsHelper extends BaseEventsHelper {
                 String qText = FileUtils.loadFileAsString(new File(GUESSES_SUBDIR, getCurrentGuessID() + "_a.txt"));
                 if (messageText.equalsIgnoreCase(qText.replaceAll(",", ""))) {
                     TgMsgUtil.sendToChat(event, "Верно!");
-                    mapIndex.put(senderUserID, mapGuessID.get(senderUserID));
+                    mapGuessID.put(senderUserID, getCurrentGuessID());
                     mapGuessStates.put(senderUserID, GuessState.IDLE);
                     mapStates.put(senderUserID, State.IDLE);
                 } else {
