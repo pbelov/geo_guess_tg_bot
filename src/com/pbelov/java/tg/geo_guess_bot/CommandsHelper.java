@@ -127,7 +127,7 @@ class CommandsHelper extends BaseEventsHelper {
     }
 
     private static void skipGuess(CommandMessageReceivedEvent event) {
-        mapStates.put(senderUserID, State.IDLE);
+        mapStates.put(senderUserID, State.GUESS);
         mapGuessID.put(senderUserID, getCurrentGuessID());
         mapGuessStates.put(senderUserID, GuessState.Q);
         nextGuess(event);
