@@ -40,6 +40,7 @@ public class MessageListener implements Listener {
         final String COMMAND_SKIP = "skip";
         final String COMMAND_TOP = "top";
         final String COMMAND_STATS = "stats";
+        final String COMMAND_RESET = "reset";
 
         if (command.equals(COMMAND_ADD)) {
             CommandsHelper.handleAddCommand(event);
@@ -53,6 +54,8 @@ public class MessageListener implements Listener {
             CommandsHelper.handleTopCommand(event);
         } else if (command.equals(COMMAND_STATS)) {
             CommandsHelper.handleStatsCommand(event);
+        } else if (command.equals(COMMAND_RESET)) {
+            CommandsHelper.handleResetCommand(event);
         }
     }
 

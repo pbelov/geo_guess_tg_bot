@@ -170,6 +170,7 @@ class CommandsHelper extends BaseEventsHelper {
         }
 
         String guessesId[] = guessesFile.list(filenameFilter);
+        Arrays.sort(guessesId);
         if (guessesId.length == 0 || lastIndex >= guessesId.length) {
             return null;
         } else {
@@ -284,6 +285,13 @@ class CommandsHelper extends BaseEventsHelper {
             mapGuessStates = new HashMap<>();
         }
 
+    }
+
+    public static void handleResetCommand(CommandMessageReceivedEvent event) {
+        mapGuessID.remove(senderUserID);
+        mapGuessStates.remove(senderUserID);
+        mapAddStates.remove(senderUserID);
+        mapStates.remove(senderUserID);
     }
 
     enum AddState {
